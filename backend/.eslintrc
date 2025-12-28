@@ -19,6 +19,7 @@
     "import/extensions": [".js", ".ts"]
   },
   "rules": {
+    "quotes": ["error", "single"],
     "no-shadow": "off",
     "@typescript-eslint/no-shadow": "warn",
     "import/extensions": [
