@@ -9,11 +9,11 @@ const createOrder = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const products = await Product.find({ _id: { $in: items }, price: { $ne: null } });
     if (products.length === 0) {
-      return next(new BadRequestError('переданы некорректные данные в методы создания товара, заказа'));
+      return next(new BadRequestError('заказ не мб пустым'));
     }
     const totalPrice = products.reduce((sum, product) => sum + product.price!, 0);
     if (total !== totalPrice) {
-      return next(new BadRequestError('переданы некорректные данные в методы создания товара, заказа'));
+      return next(new BadRequestError('итоговая сумма и сумма заказа разные'));
     }
     const id = faker.string.uuid();
     return res.send({

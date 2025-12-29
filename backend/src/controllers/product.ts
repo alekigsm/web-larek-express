@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import Product from '../models/product';
 import InternalServerError from '../errors/internal-server-error';
-import BadRequestError from '../errors/bad-request-error';
+import ConflictError from '../errors/conflict-error';
 
 export const getAllProducts = (_req: Request, res: Response, next: NextFunction) => Product
   .find({})
@@ -24,7 +24,7 @@ export const createProduct = (req: Request, res: Response, next: NextFunction) =
     .then((item) => res.send(item))
     .catch((error) => {
       if (error.code === 11000) {
-        return next(new BadRequestError(`товар с именем ${title} уже существуюет`));
+        return next(new ConflictError(`товар с именем ${title} уже существуюет`));
       }
       return next(new InternalServerError('Ошибка со стороны сервера'));
     });
