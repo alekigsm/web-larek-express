@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import path from 'path';
+import fs from 'fs/promises';
 
 export interface IImage {
   fileName: string;
@@ -52,4 +54,16 @@ const productSchema = new mongoose.Schema<IProduct>({
   versionKey: false,
 });
 
+productSchema.post('findOneAndDelete', async (doc) => {
+  if (doc && doc.image && doc.image.fileName) {
+    try {
+      const fileName = path.basename(doc.image.fileName);
+      const filePath = path.join('public/images', fileName);
+
+      await fs.unlink(filePath);
+    } catch (error) {
+      // Игнорируем ошибку если файла нет
+    }
+  }
+});
 export default mongoose.model<IProduct>('product', productSchema);

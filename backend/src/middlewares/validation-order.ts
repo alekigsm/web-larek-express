@@ -11,7 +11,7 @@ export interface IOrder {
   phone: string;
   address: string;
   total: number;
-  items: string[]; // массив ObjectId
+  items: string[];
 }
 
 const orderSchema = Joi.object<IOrder>({

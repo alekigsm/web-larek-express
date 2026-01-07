@@ -4,17 +4,18 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import path from 'path';
 import { errors } from 'celebrate';
+import cookieParser from 'cookie-parser';
 import { errorLogger, requestLogger } from './middlewares/logger';
 import NotFoundError from './errors/not-found-error';
 import errorHandler from './middlewares/error-handler';
 import router from './routes/index';
+import config from './config';
+import './utils/cleanup-temp';
 
 dotenv.config();
 
 const app = express();
-const { PORT = 3000 } = process.env;
-const { DB_ADDRESS = 'mongodb://127.0.0.1:27017/weblarek' } = process.env;
-
+const { PORT, DB_ADDRESS } = config;
 // Подключение к MongoDB
 mongoose.connect(DB_ADDRESS);
 
@@ -22,6 +23,7 @@ mongoose.connect(DB_ADDRESS);
 app.use(cors()); // 1. CORS первым
 app.use(express.json()); // 2. Парсинг JSON
 app.use(express.urlencoded({ extended: true })); // 3. Парсинг form-data
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public'))); // 4. Статические файлы
 // log запросов
 app.use(requestLogger);
@@ -36,6 +38,4 @@ app.use(errorLogger);
 // ошибки
 app.use(errors());
 app.use(errorHandler);
-app.listen(PORT, () => {
-  console.log('Сервер запущен на порту', { PORT });
-});
+app.listen(PORT, () => {});

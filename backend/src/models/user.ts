@@ -1,53 +1,78 @@
 import mongoose from 'mongoose';
+import validator from 'validator';
+import bcrypt from 'bcryptjs';
+import UnauthorizedError from '../errors/unauthorized-error';
 
 export interface IToken{
     token: string;
 }
 
 export interface IUser{
-  name : string;
+  name?: string;
   email : string;
   password : string;
   tokens : IToken[]
 }
 
-const imageSchema = new mongoose.Schema<IImage>({
-  fileName: {
+interface UserModel extends mongoose.Model<IUser> {
+  findUserByCredentials:
+  (email: string, password: string) => Promise<mongoose.Document<unknown, any, IUser>>;
+}
+
+const tokensSchema = new mongoose.Schema<IToken>({
+  token: {
     type: String,
-    required: [true, 'Поле "fileName" должно быть заполнено'],
-  },
-  originalName: {
-    type: String,
-    required: [true, 'Поле "originalName" должно быть заполнено'],
+    required: true,
   },
 });
 
-const productSchema = new mongoose.Schema<IProduct>({
-  title: {
+const userSchema = new mongoose.Schema<IUser>({
+  name: {
     type: String,
-    required: [true, 'Поле "title" должно быть заполнено'],
-    minlength: [2, 'Минимальная длина поля "title" - 2'],
-    maxlength: [30, 'Максимальная длина поля "title" - 30'],
+    minlength: [2, 'Минимальная длина поля "name" - 2'],
+    maxlength: [30, 'Максимальная длина поля "name" - 30'],
+    default: 'Ё-мое',
+  },
+  email: {
+    type: String,
+    required: [true, 'Поле "email" должно быть заполнено'],
     unique: true,
+    validate: {
+      validator: (v: string) => validator.isEmail(v),
+      message: 'Некорректный формат email',
+    },
   },
-  image: {
-    type: imageSchema,
-    required: [true, 'Поле "image" должно быть заполнено'],
-  },
-  category: {
+  password: {
     type: String,
-    required: [true, 'Поле "category" должно быть заполнено'],
+    required: true,
+    minlength: [6, 'Минимальная длина поля "password" - 6'],
+    select: false,
   },
-  description: {
-    type: String,
-    required: false,
-  },
-  price: {
-    type: Number,
-    default: null,
+  tokens: {
+    type: [tokensSchema],
+    select: false,
   },
 }, {
   versionKey: false,
 });
 
-export default mongoose.model<IProduct>('product', productSchema);
+userSchema.static('findUserByCredentials', function findUserByCredentials(email: string, password: string) {
+  return this.findOne({ email })
+    .select('+password +tokens')
+    .then((user:IUser | null) => {
+      if (!user) {
+        return Promise.reject(new UnauthorizedError('Неправильная почта или пароль'));
+      }
+
+      return bcrypt.compare(password, user.password)
+        .then((matched) => {
+          if (!matched) {
+            return Promise.reject(new UnauthorizedError('Неправильная почта или пароль'));
+          }
+
+          return user;
+        });
+    });
+});
+
+export default mongoose.model<IUser, UserModel>('user', userSchema);
