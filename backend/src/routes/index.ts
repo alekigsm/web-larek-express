@@ -6,6 +6,7 @@ import authRouter from './auth';
 import orderSchema from '../middlewares/validation-order';
 import productSchema from '../middlewares/validation-product';
 import uploadRouter from './upload';
+import NotFoundError from '../errors/not-found-error';
 
 const router = Router();
 
@@ -13,4 +14,7 @@ router.use('/product', celebrate({ body: productSchema }), productRouter);
 router.use('/order', celebrate({ body: orderSchema }), orderRouter);
 router.use('/auth', authRouter);
 router.use('/upload', uploadRouter);
+router.use('*', (_req, _res, next) => {
+  next(new NotFoundError('Маршрут не найден'));
+});
 export default router;

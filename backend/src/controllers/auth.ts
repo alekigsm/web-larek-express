@@ -81,12 +81,6 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
 
 export const register = (req: Request, res: Response, next: NextFunction) => {
   const { name, email, password } = req.body;
-  if (!email || !password) {
-    return next(new BadRequestError('Email и пароль обязательны'));
-  }
-  if (password.length < 6) {
-    return next(new BadRequestError('Пароль должен быть не менее 6 символов'));
-  }
   return User.findOne({ email })
     .then((existingUser: any) => {
       if (existingUser) {

@@ -5,8 +5,8 @@ import cors from 'cors';
 import path from 'path';
 import { errors } from 'celebrate';
 import cookieParser from 'cookie-parser';
+import { rateLimit } from 'express-rate-limit';
 import { errorLogger, requestLogger } from './middlewares/logger';
-import NotFoundError from './errors/not-found-error';
 import errorHandler from './middlewares/error-handler';
 import router from './routes/index';
 import config from './config';
@@ -27,11 +27,13 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public'))); // 4. Статические файлы
 // log запросов
 app.use(requestLogger);
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  message: 'Слишком много запросов',
+}));
 // route
 app.use('/', router);
-app.use('*', (_req, _res, next) => {
-  next(new NotFoundError('Маршрут не найден'));
-});
 // log ошибок
 app.use(errorLogger);
 
